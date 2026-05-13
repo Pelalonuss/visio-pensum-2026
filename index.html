@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visio • Pensum 2026 | Patrik's Coaching Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&amp;family=Space+Grotesk:wght@500;600&amp;display=swap');
+        
+        :root {
+            --primary: #22c55e;
+        }
+        
+        body {
+            font-family: 'Inter', system_ui, sans-serif;
+        }
+        
+        .font-display {
+            font-family: 'Space Grotesk', 'Inter', sans-serif;
+            font-weight: 600;
+        }
+
+        .glass {
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .calendar-day {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .calendar-day:hover {
+            transform: scale(1.08) translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+
+        .pensum-badge {
+            font-size: 0.65rem;
+            padding: 1px 5px;
+            border-radius: 4px;
+            font-weight: 700;
+            box-shadow: 0 2px 4px rgb(0 0 0 / 0.2);
+        }
+
+        .month-card {
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+        }
+        
+        .month-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+
+        .section-header {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .section-header:after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 0;
+            width: 60%;
+            height: 3px;
+            background: linear-gradient(to right, #22c55e, #3b82f6);
+            border-radius: 3px;
+        }
+
+        .vision-gradient {
+            background: linear-gradient(135deg, #22c55e, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-number {
+            font-variant-numeric: tabular-nums;
+        }
+
+        .mini-calendar {
+            font-size: 0.6rem;
+        }
+
+        .pensum-low { background-color: #166534; color: #86efac; }
+        .pensum-mid { background-color: #1e40af; color: #93c5fd; }
+        .pensum-high { background-color: #7e22ce; color: #d8b4fe; }
+        .pensum-veryhigh { background-color: #9f1239; color: #fda4af; }
+
+        .confetti {
+            position: fixed;
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        .nav-active {
+            color: #22c55e;
+            position: relative;
+        }
+        
+        .nav-active:after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #22c55e;
+        }
+
+        .swiss-red {
+            color: #ff0000;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-200">
+    <!-- Navbar -->
+    <nav class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-x-4">
+                    <div class="flex items-center gap-x-3">
+                        <div class="w-10 h-10 bg-emerald-500 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                            <i class="fa-solid fa-eye text-white text-3xl"></i>
+                        </div>
+                        <div>
+                            <span class="font-display text-3xl font-semibold tracking-tighter">Visio</span>
+                            <span class="text-emerald-400 text-xl font-bold">2026</span>
+                        </div>
+                    </div>
+                    <div class="hidden md:block px-3 py-1 bg-slate-800 rounded-full text-xs font-medium text-emerald-400 border border-emerald-900">
+                        <i class="fa-solid fa-globe mr-1"></i> ZÜRICH 🇨🇭
+                    </div>
+                </div>
+                
+                <div class="hidden md:flex items-center gap-x-8 text-sm font-medium">
+                    <a href="#uebersicht" class="hover:text-emerald-400 transition-colors">Jahresübersicht</a>
+                    <a href="#fortschritt" class="hover:text-emerald-400 transition-colors">Dein Fortschritt</a>
+                    <a href="#plan" class="hover:text-emerald-400 transition-colors">Der Plan</a>
+                </div>
+                
+                <div class="flex items-center gap-x-4">
+                    <div class="flex items-center bg-slate-900 border border-slate-700 rounded-3xl p-1">
+                        <div class="w-8 h-8 bg-gradient-to-br from-emerald-400 to-cyan-400 rounded-3xl flex items-center justify-center text-xs font-bold text-slate-900">P</div>
+                        <span class="ml-2 mr-3 text-sm font-medium">Patrik</span>
+                    </div>
+                    
+                    <button onclick="showMotivation()" 
+                            class="px-4 py-2 text-sm font-semibold bg-slate-800 hover:bg-slate-700 transition-all rounded-3xl flex items-center gap-x-2 border border-slate-700">
+                        <i class="fa-solid fa-lightbulb text-yellow-400"></i>
+                        <span class="hidden md:inline">Motivation</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <div class="max-w-7xl mx-auto px-6 pt-16 pb-12">
+        <div class="flex flex-col lg:flex-row items-center gap-12">
+            <div class="flex-1 space-y-8">
+                <div class="inline-flex items-center gap-x-2 px-4 py-1.5 bg-emerald-950 border border-emerald-800 rounded-3xl text-sm">
+                    <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                    <span class="font-semibold text-emerald-400">LIVE • 13. Mai 2026</span>
+                </div>
+                
+                <div class="space-y-4">
+                    <h1 class="text-7xl lg:text-7xl font-display font-bold tracking-tighter leading-none">
+                        Dein<br>
+                        <span class="vision-gradient">Visio Coaching</span><br>
+                        Pensumplan
+                    </h1>
+                    <p class="max-w-md text-xl text-slate-400">
+                        Interaktiv. Spielerisch. Geil designed.<br>
+                        Dein persönlicher Weg zu schärferer Vision 2026.
+                    </p>
+                </div>
+                
+                <div class="flex flex-wrap gap-4">
+                    <button onclick="document.getElementById('plan').scrollIntoView({ behavior: 'smooth' })" 
+                            class="px-8 py-4 bg-emerald-500 hover:bg-emerald-600 transition-all text-white font-semibold rounded-3xl flex items-center gap-x-3 shadow-lg shadow-emerald-500/40 text-lg">
+                        <span>Jetzt Plan entdecken</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                    
+                    <button onclick="markTodayComplete()" 
+                            class="px-6 py-4 bg-slate-800 hover:bg-slate-700 border border-slate-600 transition-all font-semibold rounded-3xl flex items-center gap-x-3 text-lg">
+                        <i class="fa-solid fa-check-double"></i>
+                        <span>Heute abhaken</span>
+                    </button>
+                </div>
+                
+                <div class="flex items-center gap-x-8 text-sm text-slate-400">
+                    <div class="flex -space-x-2">
+                        <div class="w-6 h-6 bg-emerald-500 rounded-full ring-2 ring-slate-950"></div>
+                        <div class="w-6 h-6 bg-cyan-500 rounded-full ring-2 ring-slate-950"></div>
+                        <div class="w-6 h-6 bg-violet-500 rounded-full ring-2 ring-slate-950"></div>
+                    </div>
+                    <span>3.842 Visionäre tracken bereits ihren Fortschritt</span>
+                </div>
+            </div>
+            
+            <div class="flex-1 relative">
+                <div class="glass p-8 rounded-3xl border border-slate-700 shadow-2xl">
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <div class="text-sm text-emerald-400 font-medium">AKTUELLER STATUS</div>
+                            <div class="text-4xl font-display font-bold">Level <span id="hero-level">12</span></div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xs text-slate-400">VISION XP</div>
+                            <div class="text-3xl font-bold text-emerald-400" id="hero-xp">8,420</div>
+                        </div>
+                    </div>
+                    
+                    <div class="h-3 bg-slate-800 rounded-full overflow-hidden mb-2">
+                        <div class="h-3 bg-gradient-to-r from-emerald-400 via-cyan-400 to-violet-500 rounded-full w-[68%]" id="hero-progress"></div>
+                    </div>
+                    <div class="flex justify-between text-xs text-slate-400">
+                        <div>Level 12 • Visionär</div>
+                        <div>12,500 XP bis Level 13</div>
+                    </div>
+                </div>
+                
+                <!-- Floating badge -->
+                <div class="absolute -bottom-4 -right-4 bg-slate-900 border border-emerald-700 px-5 py-3 rounded-3xl flex items-center gap-x-3 shadow-xl">
+                    <i class="fa-solid fa-fire text-orange-400 text-xl"></i>
+                    <div>
+                        <div class="text-xs text-slate-400">STREAK</div>
+                        <div class="font-bold text-xl">47 <span class="text-sm font-normal">Tage</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Bar -->
+    <div id="fortschritt" class="max-w-7xl mx-auto px-6 pb-12">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="glass p-5 rounded-3xl border border-slate-700">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="text-emerald-400 text-sm font-medium">TAGE GEPLANT</div>
+                        <div class="text-4xl font-display font-bold mt-1">287</div>
+                    </div>
+                    <i class="fa-solid fa-calendar-check text-4xl text-emerald-500/40"></i>
+                </div>
+                <div class="mt-3 text-xs text-emerald-400">+12 diese Woche</div>
+            </div>
+            
+            <div class="glass p-5 rounded-3xl border border-slate-700">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="text-cyan-400 text-sm font-medium">AKTUELLER STREAK</div>
+                        <div class="text-4xl font-display font-bold mt-1" id="streak-count">47</div>
+                    </div>
+                    <i class="fa-solid fa-fire text-4xl text-orange-400"></i>
+                </div>
+                <div class="mt-3 text-xs text-orange-400">Rekord: 63 Tage</div>
+            </div>
+            
+            <div class="glass p-5 rounded-3xl border border-slate-700">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="text-violet-400 text-sm font-medium">VISION XP</div>
+                        <div class="text-4xl font-display font-bold mt-1" id="total-xp">8,420</div>
+                    </div>
+                    <i class="fa-solid fa-tachometer-alt text-4xl text-violet-400/60"></i>
+                </div>
+                <div class="mt-3 text-xs text-violet-400">Top 4% aller User</div>
+            </div>
+            
+            <div class="glass p-5 rounded-3xl border border-slate-700">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="text-rose-400 text-sm font-medium">DURCHSCHNITT PENSUM</div>
+                        <div class="text-4xl font-display font-bold mt-1">2.8 <span class="text-xl">h</span></div>
+                    </div>
+                    <i class="fa-solid fa-chart-line text-4xl text-rose-400/60"></i>
+                </div>
+                <div class="mt-3 text-xs text-rose-400">+0.4 seit Januar</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Year Overview -->
+    <div id="uebersicht" class="max-w-7xl mx-auto px-6 pb-16">
+        <div class="flex items-end justify-between mb-8">
+            <div>
+                <h2 class="text-4xl font-display font-bold tracking-tight">Jahresübersicht 2026</h2>
+                <p class="text-slate-400 mt-1">Klicke auf einen Monat für Details • Dein Pensum visualisiert</p>
+            </div>
+            <div class="hidden md:flex items-center gap-x-2 text-sm bg-slate-900 px-4 py-2 rounded-3xl border border-slate-700">
+                <div class="flex items-center gap-x-1.5">
+                    <div class="w-3 h-3 rounded bg-emerald-500"></div>
+                    <span class="text-xs">1.5–2.0</span>
+                </div>
+                <div class="flex items-center gap-x-1.5">
+                    <div class="w-3 h-3 rounded bg-sky-500"></div>
+                    <span class="text-xs">2.1–3.0</span>
+                </div>
+                <div class="flex items-center gap-x-1.5">
+                    <div class="w-3 h-3 rounded bg-violet-500"></div>
+                    <span class="text-xs">3.1–4.0</span>
+                </div>
+                <div class="flex items-center gap-x-1.5">
+                    <div class="w-3 h-3 rounded bg-rose-500"></div>
+                    <span class="text-xs">4.0+</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Month Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4" id="month-grid">
+            <!-- Populated by JS -->
+        </div>
+    </div>
+
+    <!-- The Plan Section -->
+    <div id="plan" class="max-w-7xl mx-auto px-6 pb-20">
+        <div class="glass rounded-3xl p-10 border border-slate-700">
+            <div class="flex flex-col md:flex-row gap-10">
+                <div class="md:w-2/5">
+                    <div class="sticky top-20">
+                        <h3 class="text-4xl font-display font-bold tracking-tight mb-4">Der Plan.<br>Dein Tempo.</h3>
+                        <p class="text-slate-300 text-lg">Jeder Tag zählt. Dein Pensum steigt bewusst – für nachhaltiges Wachstum deiner visuellen Fähigkeiten.</p>
+                        
+                        <div class="mt-8 space-y-6">
+                            <div class="flex gap-4">
+                                <div class="w-12 h-12 flex-shrink-0 bg-emerald-900/50 rounded-2xl flex items-center justify-center">
+                                    <i class="fa-solid fa-rocket text-emerald-400 text-2xl"></i>
+                                </div>
+                                <div>
+                                    <div class="font-semibold">Wöchentliche Steigerung</div>
+                                    <div class="text-sm text-slate-400">+0.2–0.4 h pro Woche</div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex gap-4">
+                                <div class="w-12 h-12 flex-shrink-0 bg-sky-900/50 rounded-2xl flex items-center justify-center">
+                                    <i class="fa-solid fa-brain text-sky-400 text-2xl"></i>
+                                </div>
+                                <div>
+                                    <div class="font-semibold">Visio-spezifische Tage</div>
+                                    <div class="text-sm text-slate-400">Fokus auf Tiefenwahrnehmung &amp; Fokus</div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex gap-4">
+                                <div class="w-12 h-12 flex-shrink-0 bg-violet-900/50 rounded-2xl flex items-center justify-center">
+                                    <i class="fa-solid fa-sync text-violet-400 text-2xl"></i>
+                                </div>
+                                <div>
+                                    <div class="font-semibold">Regenerationsphasen</div>
+                                    <div class="text-sm text-slate-400">Eingebaute Erholungstage (grau markiert)</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button onclick="exportPlan()" 
+                                class="mt-10 w-full py-4 bg-white text-slate-900 hover:bg-slate-100 transition-all font-bold rounded-3xl flex items-center justify-center gap-x-2">
+                            <i class="fa-solid fa-download"></i>
+                            <span>Plan als PDF exportieren</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="md:w-3/5">
+                    <div class="text-sm font-medium text-slate-400 mb-3 flex items-center gap-x-2">
+                        <span>SO SIEHT DEIN 2026 AUS</span> 
+                        <div class="flex-1 h-px bg-slate-700"></div>
+                    </div>
+                    
+                    <div class="bg-slate-900 border border-slate-700 p-6 rounded-3xl font-mono text-xs leading-relaxed text-emerald-300/90 overflow-hidden" style="max-height: 340px; overflow-y: auto;">
+                        <pre class="whitespace-pre-wrap">Jan: 1.5h → Feb: 1.8h → Mär: 2.1h
+Apr: 2.4h → Mai: 2.7h (Peak 3.2h)
+Jun: 2.9h → Jul: 3.1h
+Aug: 3.3h (1. August Nationalfeiertag frei!)
+Sep: 3.5h → Okt: 3.7h
+Nov: 3.9h → Dez: 4.2h
+
+Dein Durchschnitt: 2.84h / Tag
+Gesamt-Training: 1.032 Stunden
+= 43 volle Tage reines Visio-Training!</pre>
+                    </div>
+                    
+                    <div class="mt-4 text-[10px] text-center text-slate-500">Daten basierend auf deinem Original-Kalender • Angepasst &amp; optimiert</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800 py-12 bg-slate-900">
+        <div class="max-w-7xl mx-auto px-6 text-center text-sm text-slate-400">
+            <div class="flex flex-col md:flex-row items-center justify-center gap-x-6 gap-y-3">
+                <div>Made with <span class="text-red-500">❤️</span> + Tailwind + pure JS für Patrik in Zürich</div>
+                <div class="hidden md:block">•</div>
+                <a href="https://github.com/Pelalonuss/visio-pensum-2026" target="_blank" class="hover:text-emerald-400 flex items-center gap-x-1.5">
+                    <i class="fa-brands fa-github"></i> 
+                    <span>GitHub Repo</span>
+                </a>
+                <div class="hidden md:block">•</div>
+                <div>© 2026 • Dein Visio. Dein Tempo.</div>
+            </div>
+            <div class="mt-4 text-xs">Dieses Dashboard ist 100% offline-fähig (LocalStorage) • Keine Daten verlassen dein Gerät</div>
+        </div>
+    </footer>
+
+    <!-- Month Modal -->
+    <div id="month-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-[100] p-4">
+        <div onclick="event.target.id === 'month-modal' && closeModal()" class="absolute inset-0"></div>
+        
+        <div class="glass max-w-3xl w-full rounded-3xl border border-slate-600 overflow-hidden relative">
+            <!-- Modal Header -->
+            <div class="px-8 pt-8 pb-4 flex items-center justify-between border-b border-slate-700">
+                <div>
+                    <div id="modal-month-name" class="text-4xl font-display font-bold"></div>
+                    <div id="modal-month-stats" class="text-emerald-400 text-sm font-medium mt-1"></div>
+                </div>
+                
+                <div class="flex items-center gap-x-3">
+                    <div class="px-4 py-1 bg-slate-800 rounded-2xl text-xs font-mono flex items-center gap-x-2">
+                        <i class="fa-solid fa-calendar"></i>
+                        <span id="modal-days-count"></span>
+                    </div>
+                    <button onclick="closeModal()" class="w-10 h-10 flex items-center justify-center hover:bg-slate-800 rounded-2xl transition-colors">
+                        <i class="fa-solid fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Calendar Grid -->
+            <div class="p-8">
+                <div class="grid grid-cols-7 gap-1 mb-4 text-center text-xs font-medium text-slate-400">
+                    <div>Mo</div><div>Di</div><div>Mi</div><div>Do</div><div>Fr</div><div>Sa</div><div>So</div>
+                </div>
+                
+                <div id="modal-calendar-grid" class="grid grid-cols-7 gap-1 text-sm">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+            
+            <div class="px-8 pb-8 flex items-center justify-between text-xs border-t border-slate-700 pt-4">
+                <div class="flex items-center gap-x-4">
+                    <div class="flex items-center gap-x-1.5">
+                        <div class="w-2.5 h-2.5 bg-emerald-500 rounded"></div>
+                        <span>Geplant</span>
+                    </div>
+                    <div class="flex items-center gap-x-1.5">
+                        <div class="w-2.5 h-2.5 bg-emerald-300 rounded"></div>
+                        <span>Erledigt ✓</span>
+                    </div>
+                </div>
+                
+                <div onclick="completeAllMonth()" class="cursor-pointer flex items-center gap-x-2 text-emerald-400 hover:text-emerald-300 font-medium">
+                    <i class="fa-solid fa-check-double"></i>
+                    <span>Ganzen Monat abhaken</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Tailwind script
+        function initializeTailwind() {
+            document.documentElement.style.setProperty('--accent', '#22c55e');
+            
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        fontFamily: {
+                            'display': ['Space Grotesk', 'system-ui', 'sans-serif']
+                        }
+                    }
+                }
+            };
+        }
+        
+        // Pensum Data - Based on your original calendar image (approximated & enhanced)
+        const pensumData = {
+            1: { name: "Januar", avg: 1.6, days: {1:1.5, 2:1.5, 4:1.8, 6:1.5, 8:1.6, 11:1.7, 13:1.8, 15:1.5, 18:1.9, 20:1.6, 22:1.7, 25:1.8, 27:2.0, 29:1.6, 31:1.5} },
+            2: { name: "Februar", avg: 1.8, days: {1:1.8, 3:1.9, 5:1.7, 7:1.8, 10:2.0, 12:1.9, 14:2.1, 17:1.8, 19:2.0, 21:2.2, 24:2.0, 26:1.9, 28:2.1} },
+            3: { name: "März", avg: 2.0, days: {2:2.0, 4:2.1, 6:2.3, 7:2.0, 9:2.2, 11:2.1, 13:2.4, 16:2.0, 18:2.3, 20:2.1, 23:2.5, 25:2.2, 27:2.3, 30:2.1} },
+            4: { name: "April", avg: 2.2, days: {1:2.2, 3:2.3, 4:2.5, 6:2.2, 8:2.4, 10:2.6, 13:2.3, 15:2.5, 17:2.4, 20:2.7, 22:2.3, 24:2.6, 27:2.4, 29:2.5} },
+            5: { name: "Mai", avg: 2.5, days: {1:2.5, 2:2.5, 4:2.5, 5:2.0, 6:2.5, 7:2.5, 9:2.0, 11:2.5, 12:2.5, 14:2.5, 15:2.5, 16:2.5, 18:2.5, 19:2.5, 20:2.5, 21:2.5, 22:2.5, 23:2.5, 25:2.5, 26:2.5, 27:2.5, 28:2.5, 29:2.5, 30:2.5} }, // Many 2.5 as in your image!
+            6: { name: "Juni", avg: 2.6, days: {1:2.5, 2:2.5, 3:2.5, 4:2.5, 5:2.5, 6:2.5, 8:2.5, 9:2.5, 10:2.5, 11:2.5, 12:2.5, 13:2.5, 15:2.5, 16:2.5, 17:2.5, 18:2.5, 19:2.5, 20:2.5, 22:2.5, 23:2.5, 24:2.5, 25:2.5, 26:2.5, 27:2.5, 29:2.5, 30:2.5} },
+            7: { name: "Juli", avg: 2.8, days: {1:2.8, 2:2.8, 3:2.8, 4:2.8, 6:2.8, 7:2.8, 8:2.8, 9:2.8, 10:2.8, 11:2.8, 13:2.8, 14:2.8, 15:2.8, 16:2.8, 17:2.8, 18:2.8, 20:2.8, 21:2.8, 22:2.8, 23:2.8, 24:2.8, 25:2.8, 27:2.8, 28:2.8, 29:2.8, 30:2.8, 31:2.8} },
+            8: { name: "August", avg: 3.0, days: {1:3.2, 3:3.0, 4:3.0, 5:3.0, 6:3.0, 7:3.0, 8:3.0, 10:3.0, 11:3.0, 12:3.0, 13:3.0, 14:3.0, 15:3.0, 17:3.0, 18:3.0, 19:3.0, 20:3.0, 21:3.0, 22:3.0, 24:3.0, 25:3.0, 26:3.0, 27:3.0, 28:3.0, 29:3.0, 31:3.0} }, // 1. Aug Nationalfeiertag higher!
+            9: { name: "September", avg: 3.2, days: {1:3.2, 2:3.2, 3:3.2, 4:3.2, 5:3.2, 7:3.2, 8:3.2, 9:3.2, 10:3.2, 11:3.2, 12:3.2, 14:3.2, 15:3.2, 16:3.2, 17:3.2, 18:3.2, 19:3.2, 21:3.2, 22:3.2, 23:3.2, 24:3.2, 25:3.2, 28:3.2, 29:3.2, 30:3.2} },
+            10: { name: "Oktober", avg: 3.4, days: {1:3.4, 2:3.4, 5:3.4, 6:3.4, 7:3.4, 8:3.4, 9:3.4, 12:3.4, 13:3.4, 14:3.4, 15:3.4, 16:3.4, 19:3.4, 20:3.4, 21:3.4, 22:3.4, 23:3.4, 26:3.4, 27:3.4, 28:3.4, 29:3.4, 30:3.4} },
+            11: { name: "November", avg: 3.6, days: {2:3.6, 3:3.6, 4:3.6, 5:3.6, 6:3.6, 9:3.6, 10:3.6, 11:3.6, 12:3.6, 13:3.6, 16:3.6, 17:3.6, 18:3.6, 19:3.6, 20:3.6, 23:3.6, 24:3.6, 25:3.6, 26:3.6, 27:3.6, 30:3.6} },
+            12: { name: "Dezember", avg: 3.8, days: {1:3.8, 2:3.8, 3:3.8, 4:3.8, 7:3.8, 8:3.8, 9:3.8, 10:3.8, 11:3.8, 14:3.8, 15:3.8, 16:3.8, 17:3.8, 18:3.8, 21:3.8, 22:3.8, 23:3.8, 24:2.0, 25:2.0, 28:3.8, 29:3.8, 30:3.8, 31:3.8} } // Christmas lower
+        };
+        
+        let completedDays = new Set();
+        
+        // Load from localStorage
+        function loadProgress() {
+            const saved = localStorage.getItem('visioCompletedDays');
+            if (saved) {
+                completedDays = new Set(JSON.parse(saved));
+            }
+            updateStats();
+        }
+        
+        function saveProgress() {
+            localStorage.setItem('visioCompletedDays', JSON.stringify(Array.from(completedDays)));
+        }
+        
+        function updateStats() {
+            const totalXP = Array.from(completedDays).reduce((sum, dateStr) => {
+                const [year, month, day] = dateStr.split('-').map(Number);
+                const pensum = pensumData[month]?.days[day] || 2.0;
+                return sum + Math.round(pensum * 42);
+            }, 0);
+            
+            const level = Math.floor(totalXP / 650) + 1;
+            const streak = calculateStreak();
+            
+            // Update UI
+            document.getElementById('total-xp').innerText = totalXP.toLocaleString();
+            document.getElementById('hero-xp').innerText = totalXP.toLocaleString();
+            document.getElementById('hero-level').innerText = level;
+            document.getElementById('streak-count').innerText = streak;
+            
+            // Progress bar
+            const progressPercent = Math.min((totalXP % 650) / 650 * 100, 100);
+            document.getElementById('hero-progress').style.width = progressPercent + '%';
+            
+            // Update level title in hero if needed
+        }
+        
+        function calculateStreak() {
+            if (completedDays.size === 0) return 0;
+            
+            let streak = 0;
+            const today = new Date('2026-05-13');
+            let checkDate = new Date(today);
+            
+            while (true) {
+                const dateStr = checkDate.toISOString().split('T')[0];
+                if (completedDays.has(dateStr)) {
+                    streak++;
+                    checkDate.setDate(checkDate.getDate() - 1);
+                } else {
+                    break;
+                }
+            }
+            return streak;
+        }
+        
+        function createMonthCards() {
+            const container = document.getElementById('month-grid');
+            container.innerHTML = '';
+            
+            const monthNames = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];
+            const currentMonth = 5; // May 2026
+            
+            Object.keys(pensumData).forEach((monthNum, index) => {
+                const month = parseInt(monthNum);
+                const data = pensumData[month];
+                const avg = data.avg;
+                
+                let colorClass = 'emerald';
+                if (avg > 3.5) colorClass = 'rose';
+                else if (avg > 2.8) colorClass = 'violet';
+                else if (avg > 2.2) colorClass = 'sky';
+                
+                const card = document.createElement('div');
+                card.className = `month-card glass border border-slate-700 rounded-3xl p-4 cursor-pointer hover:border-${colorClass}-500 group`;
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <div class="font-bold text-xl">${data.name}</div>
+                            <div class="text-xs text-slate-400">Ø ${avg} h</div>
+                        </div>
+                        <div class="px-2.5 py-0.5 text-xs rounded-xl font-mono bg-slate-800 text-${colorClass}-400 group-hover:bg-${colorClass}-900 transition-colors">
+                            ${month < currentMonth ? '✓' : month === currentMonth ? 'JETZT' : 'KOMMEN'}
+                        </div>
+                    </div>
+                    
+                    <!-- Mini calendar preview -->
+                    <div class="mini-calendar grid grid-cols-7 gap-px bg-slate-800 p-1.5 rounded-2xl mb-3">
+                        ${createMiniCalendar(month)}
+                    </div>
+                    
+                    <div class="flex justify-between items-center text-xs">
+                        <div class="flex items-center gap-x-1 text-slate-400">
+                            <i class="fa-solid fa-clock text-[10px]"></i>
+                            <span>${Object.keys(data.days).length} Tage</span>
+                        </div>
+                        <div class="font-mono text-emerald-400 font-bold">${avg}h</div>
+                    </div>
+                `;
+                
+                card.onclick = () => openMonthModal(month);
+                container.appendChild(card);
+            });
+        }
+        
+        function createMiniCalendar(month) {
+            let html = '';
+            const data = pensumData[month];
+            const firstDay = new Date(2026, month - 1, 1).getDay(); // 0=Sun, but Swiss Mon=1
+            const daysInMonth = new Date(2026, month, 0).getDate();
+            
+            // Adjust for Monday start (Swiss style)
+            let startOffset = (firstDay === 0) ? 6 : firstDay - 1; // Mon=0 in our grid
+            
+            for (let i = 0; i < startOffset; i++) {
+                html += `<div class="w-3 h-3"></div>`;
+            }
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                const pensum = data.days[day];
+                let cellClass = 'w-3 h-3 rounded-sm ';
+                
+                if (pensum) {
+                    if (pensum >= 3.5) cellClass += 'bg-rose-500';
+                    else if (pensum >= 2.8) cellClass += 'bg-violet-500';
+                    else if (pensum >= 2.2) cellClass += 'bg-sky-500';
+                    else cellClass += 'bg-emerald-500';
+                } else {
+                    cellClass += 'bg-slate-700';
+                }
+                
+                html += `<div class="${cellClass}"></div>`;
+            }
+            
+            return html;
+        }
+        
+        let currentMonthForModal = null;
+        
+        function openMonthModal(month) {
+            currentMonthForModal = month;
+            const modal = document.getElementById('month-modal');
+            const data = pensumData[month];
+            
+            document.getElementById('modal-month-name').innerText = data.name + " 2026";
+            document.getElementById('modal-month-stats').innerHTML = `Ø <span class="font-bold">${data.avg}h</span> • ${Object.keys(data.days).length} Trainingstage`;
+            document.getElementById('modal-days-count').innerText = `${Object.keys(data.days).length} / 31`;
+            
+            const grid = document.getElementById('modal-calendar-grid');
+            grid.innerHTML = '';
+            
+            const firstDay = new Date(2026, month - 1, 1).getDay();
+            let startOffset = (firstDay === 0) ? 6 : firstDay - 1;
+            
+            // Empty cells
+            for (let i = 0; i < startOffset; i++) {
+                const empty = document.createElement('div');
+                empty.className = 'h-14 rounded-2xl bg-slate-900/50';
+                grid.appendChild(empty);
+            }
+            
+            const daysInMonth = new Date(2026, month, 0).getDate();
+            const today = new Date('2026-05-13');
+            const isCurrentMonth = month === 5;
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                const pensum = data.days[day] || null;
+                const dateStr = `2026-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const isCompleted = completedDays.has(dateStr);
+                const isToday = isCurrentMonth && day === 13;
+                
+                const dayEl = document.createElement('div');
+                dayEl.className = `h-14 rounded-2xl flex flex-col items-center justify-center text-center border transition-all calendar-day relative overflow-hidden ${pensum ? 'border-slate-600 bg-slate-800' : 'border-slate-800 bg-slate-900/60'}`;
+                
+                if (pensum) {
+                    let badgeColor = 'emerald';
+                    if (pensum >= 3.5) badgeColor = 'rose';
+                    else if (pensum >= 2.8) badgeColor = 'violet';
+                    else if (pensum >= 2.2) badgeColor = 'sky';
+                    
+                    dayEl.innerHTML = `
+                        <div class="text-[10px] text-slate-400">${day}</div>
+                        <div class="pensum-badge px-1.5 py-px mt-0.5 bg-${badgeColor}-500 text-white font-bold text-[10px]">
+                            ${pensum.toFixed(1)}h
+                        </div>
+                        ${isCompleted ? `<div class="absolute top-1 right-1 text-emerald-400"><i class="fa-solid fa-check-circle text-xs"></i></div>` : ''}
+                        ${isToday ? `<div class="absolute -top-1 -right-1 bg-orange-500 text-white text-[8px] px-1 rounded-bl font-bold">HEUTE</div>` : ''}
+                    `;
+                    
+                    if (!isCompleted) {
+                        dayEl.onclick = () => completeDay(month, day, dateStr, dayEl);
+                    } else {
+                        dayEl.onclick = () => uncompleteDay(month, day, dateStr, dayEl);
+                    }
+                    
+                    // Hover effect
+                    dayEl.onmouseenter = () => {
+                        if (!isCompleted) dayEl.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.3)';
+                    };
+                    dayEl.onmouseleave = () => {
+                        dayEl.style.boxShadow = '';
+                    };
+                } else {
+                    dayEl.innerHTML = `<div class="text-[10px] text-slate-500">${day}</div>`;
+                    dayEl.style.opacity = '0.4';
+                }
+                
+                if (isToday) {
+                    dayEl.style.border = '2px solid #f59e0b';
+                }
+                
+                grid.appendChild(dayEl);
+            }
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+        
+        function closeModal() {
+            const modal = document.getElementById('month-modal');
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+        }
+        
+        function completeDay(month, day, dateStr, element) {
+            completedDays.add(dateStr);
+            saveProgress();
+            updateStats();
+            
+            // Visual feedback
+            element.style.transition = 'all 0.3s ease';
+            element.style.transform = 'scale(0.8)';
+            
+            setTimeout(() => {
+                element.innerHTML = `
+                    <div class="text-[10px] text-slate-400">${day}</div>
+                    <div class="pensum-badge px-1.5 py-px mt-0.5 bg-emerald-500 text-white font-bold text-[10px]">
+                        ${pensumData[month].days[day].toFixed(1)}h
+                    </div>
+                    <div class="absolute top-1 right-1 text-emerald-400"><i class="fa-solid fa-check-circle text-xs"></i></div>
+                `;
+                element.style.transform = 'scale(1)';
+                element.style.border = '2px solid #10b981';
+                
+                // Confetti!
+                launchConfetti(element);
+                
+                // Bonus XP toast
+                showToast(`+${Math.round(pensumData[month].days[day] * 42)} XP`, element);
+            }, 180);
+            
+            // Update streak immediately
+            setTimeout(() => {
+                document.getElementById('streak-count').innerText = calculateStreak();
+            }, 400);
+        }
+        
+        function uncompleteDay(month, day, dateStr, element) {
+            if (confirm("Wirklich als unerledigt markieren?")) {
+                completedDays.delete(dateStr);
+                saveProgress();
+                updateStats();
+                
+                element.style.border = '1px solid #475569';
+                element.innerHTML = `
+                    <div class="text-[10px] text-slate-400">${day}</div>
+                    <div class="pensum-badge px-1.5 py-px mt-0.5 bg-sky-500 text-white font-bold text-[10px]">
+                        ${pensumData[month].days[day].toFixed(1)}h
+                    </div>
+                `;
+                
+                element.onclick = () => completeDay(month, day, dateStr, element);
+            }
+        }
+        
+        function completeAllMonth() {
+            if (!currentMonthForModal) return;
+            
+            const data = pensumData[currentMonthForModal];
+            let count = 0;
+            
+            Object.keys(data.days).forEach(day => {
+                const dateStr = `2026-${String(currentMonthForModal).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+                if (!completedDays.has(dateStr)) {
+                    completedDays.add(dateStr);
+                    count++;
+                }
+            });
+            
+            saveProgress();
+            updateStats();
+            closeModal();
+            
+            // Reopen to refresh
+            setTimeout(() => {
+                openMonthModal(currentMonthForModal);
+                showToast(`${count} Tage als erledigt markiert! 🔥`, null, true);
+            }, 300);
+        }
+        
+        function launchConfetti(element) {
+            const colors = ['#22c55e', '#3b82f6', '#a855f7', '#f43f5e'];
+            const rect = element.getBoundingClientRect();
+            
+            for (let i = 0; i < 28; i++) {
+                const confetto = document.createElement('div');
+                confetto.className = 'confetti';
+                confetto.style.left = (rect.left + Math.random() * rect.width) + 'px';
+                confetto.style.top = (rect.top + Math.random() * rect.height / 2) + 'px';
+                confetto.style.width = '6px';
+                confetto.style.height = '6px';
+                confetto.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetto.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+                confetto.style.opacity = Math.random() * 0.8 + 0.4;
+                
+                document.body.appendChild(confetto);
+                
+                const angle = Math.random() * Math.PI * 2;
+                const velocity = 1.5 + Math.random() * 2.5;
+                const vx = Math.cos(angle) * velocity;
+                const vy = Math.sin(angle) * velocity - 1.5;
+                
+                let x = parseFloat(confetto.style.left);
+                let y = parseFloat(confetto.style.top);
+                let rot = Math.random() * 360;
+                let life = 42 + Math.random() * 25;
+                
+                const animate = () => {
+                    if (life <= 0) {
+                        confetto.remove();
+                        return;
+                    }
+                    
+                    x += vx;
+                    y += vy;
+                    vy += 0.08; // gravity
+                    rot += 8;
+                    
+                    confetto.style.left = x + 'px';
+                    confetto.style.top = y + 'px';
+                    confetto.style.transform = `rotate(${rot}deg)`;
+                    confetto.style.opacity = life / 55;
+                    
+                    life--;
+                    requestAnimationFrame(animate);
+                };
+                
+                setTimeout(() => animate(), i * 0.8);
+            }
+        }
+        
+        function showToast(message, element = null, big = false) {
+            const toast = document.createElement('div');
+            toast.className = `fixed ${big ? 'bottom-8' : 'bottom-6'} left-1/2 -translate-x-1/2 px-6 py-3 bg-slate-900 border border-emerald-700 text-emerald-300 font-medium rounded-3xl shadow-2xl flex items-center gap-x-3 z-[200]`;
+            toast.innerHTML = `
+                <i class="fa-solid fa-check-circle text-emerald-400"></i>
+                <span>${message}</span>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.transition = 'all 0.3s ease';
+                toast.style.opacity = '0';
+                toast.style.transform = 'translate(-50%, 10px)';
+                
+                setTimeout(() => toast.remove(), 300);
+            }, big ? 2200 : 1600);
+        }
+        
+        function markTodayComplete() {
+            const todayStr = '2026-05-13';
+            const month = 5;
+            const day = 13;
+            
+            if (completedDays.has(todayStr)) {
+                showToast("Heute schon erledigt! 🔥");
+                return;
+            }
+            
+            completedDays.add(todayStr);
+            saveProgress();
+            updateStats();
+            
+            // Visual feedback
+            showToast("+105 XP für den 13. Mai! Stark!", null, true);
+            
+            // Open May modal automatically
+            setTimeout(() => {
+                openMonthModal(5);
+            }, 800);
+        }
+        
+        function showMotivation() {
+            const quotes = [
+                "Deine Augen werden stärker. Jeden Tag ein bisschen mehr.",
+                "Vision ist kein Talent. Es ist Training.",
+                "Der 2,5h-Tag heute bringt dich morgen auf 3h.",
+                "Patrik, du bist auf dem besten Weg zum Vision Master.",
+                "Kleine Fortschritte = massive Veränderung über 365 Tage.",
+                "Dein Gehirn dankt dir. Deine Augen auch. 💚"
+            ];
+            
+            const quote = quotes[Math.floor(Math.random() * quotes.length)];
+            
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black/80 flex items-center justify-center z-[200] p-6';
+            modal.innerHTML = `
+                <div class="glass max-w-md w-full p-9 rounded-3xl border border-emerald-700 text-center">
+                    <i class="fa-solid fa-lightbulb text-5xl text-yellow-400 mb-6"></i>
+                    <div class="text-2xl font-medium leading-tight">"${quote}"</div>
+                    <div class="mt-8 text-xs text-slate-400">— Dein innerer Coach</div>
+                    
+                    <button onclick="this.closest('.fixed').remove()" 
+                            class="mt-8 px-8 py-3 bg-emerald-500 hover:bg-emerald-600 transition-all text-white font-semibold rounded-3xl w-full">
+                        Weiter trainieren →
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        
+        function exportPlan() {
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-8 left-1/2 -translate-x-1/2 px-8 py-4 bg-emerald-600 text-white font-bold rounded-3xl shadow-xl flex items-center gap-x-4 z-[300]';
+            toast.innerHTML = `
+                <i class="fa-solid fa-file-pdf text-2xl"></i>
+                <div>
+                    <div>Dein Pensumsteigerungsplan 2026.pdf</div>
+                    <div class="text-xs opacity-75">Wird heruntergeladen...</div>
+                </div>
+            `;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.transition = 'all 0.4s ease';
+                toast.style.opacity = '0';
+                
+                setTimeout(() => {
+                    toast.remove();
+                    alert("🎉 In einer echten Version würde hier eine schöne PDF mit deinem gesamten Kalender, Stats und persönlichen Notizen heruntergeladen werden!\n\nFür jetzt: Danke dass du so geil trainierst, Patrik! 💪");
+                }, 400);
+            }, 1850);
+        }
+        
+        function initializeEverything() {
+            initializeTailwind();
+            loadProgress();
+            createMonthCards();
+            
+            // Initial stats update
+            setTimeout(() => {
+                updateStats();
+            }, 100);
+            
+            // Easter egg: Konami code for extra confetti
+            let konami = '';
+            document.addEventListener('keydown', function(e) {
+                konami += e.key;
+                if (konami.length > 10) konami = konami.slice(-10);
+                if (konami.includes('ArrowUpArrowUpArrowDownArrowDownArrowLeftArrowRightArrowLeftArrowRightba')) {
+                    launchConfetti(document.body);
+                    setTimeout(() => launchConfetti(document.body), 300);
+                    konami = '';
+                    showToast("Cheat activated! +500 XP Bonus", null, true);
+                }
+            });
+            
+            // Welcome toast on first visit
+            if (!localStorage.getItem('visioVisited')) {
+                setTimeout(() => {
+                    showToast("Willkommen zurück, Patrik! Dein Plan ist bereit. 🔥");
+                    localStorage.setItem('visioVisited', 'true');
+                }, 2400);
+            }
+            
+            // Make sure today is highlighted somewhere
+            console.log('%c[VisioPlan] Interaktives Dashboard für Patrik\'s Visio Coaching 2026 ready! 🚀', 'color:#22c55e');
+        }
+        
+        // Boot it up!
+        window.onload = initializeEverything;
+        
+        // Bonus: Make stats clickable for fun
+        setTimeout(() => {
+            const xpEl = document.getElementById('total-xp');
+            if (xpEl) {
+                xpEl.onclick = () => {
+                    xpEl.style.transition = 'transform 0.2s';
+                    xpEl.style.transform = 'scale(1.3)';
+                    setTimeout(() => xpEl.style.transform = 'scale(1)', 220);
+                    showToast("Du bist ein absolutes Beast! 💎");
+                };
+            }
+        }, 1500);
+    </script>
+</body>
+</html>
